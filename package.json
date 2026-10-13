@@ -7,12 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npx tsx src/lib/triage.test.ts",
-    "verify": "npx tsx src/lib/e2e-verify.ts"
+    "test": "npx tsx src/lib/comprehensive.test.ts",
+    "test:triage": "npx tsx src/lib/triage.test.ts",
+    "test:all": "npx tsx src/lib/comprehensive.test.ts",
+    "verify": "npx tsx src/lib/e2e-verify.ts",
+    "seed:db": "npx tsx src/lib/seed-db.ts"
   },
   "dependencies": {
     "lucide-react": "^1.56.0",
     "next": "16.4.0",
+    "postgres": "^3.4.9",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

@@ -112,6 +112,14 @@ export const AuditTrail: React.FC<AuditTrailProps> = ({ auditLogs, onRefresh }) 
         {/* Export & Actions */}
         <div className="flex items-center gap-2">
           <button
+            type="button"
+            onClick={onRefresh}
+            className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold transition shadow-2xs"
+          >
+            Refresh
+          </button>
+          <button
+            type="button"
             onClick={exportCSV}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold transition shadow-2xs"
           >

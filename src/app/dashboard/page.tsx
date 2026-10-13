@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DEFAULT_STAFF_PROFILES, Patient, PriorityLevel, QueueSummary, StaffProfile } from '@/types/triage';
 import { Header } from '@/components/Header';
 import { NurseDashboard } from '@/components/NurseDashboard';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tokenParam = searchParams.get('token');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [summary, setSummary] = useState<QueueSummary>({
     totalWaiting: 0,
@@ -123,6 +125,7 @@ export default function DashboardPage() {
             patients={patients}
             summary={summary}
             activeStaff={activeStaff}
+            highlightedToken={tokenParam}
             onCommitOverride={handleCommitOverride}
             onUpdateStatus={handleUpdateStatus}
             onNavigateToRegister={() => router.push('/register')}
@@ -136,5 +139,19 @@ export default function DashboardPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-slate-50">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }

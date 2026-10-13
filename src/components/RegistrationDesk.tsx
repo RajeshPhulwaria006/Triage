@@ -3,19 +3,12 @@
 import React, { useState, useMemo } from 'react';
 import { PatientGender, StaffProfile, TriageInput, Vitals } from '@/types/triage';
 import { evaluateTriage } from '@/lib/triage';
-import {
-  AlertTriangle,
-  Clock,
-  CheckCircle2,
-  Check,
-  Send,
-  Zap,
-} from 'lucide-react';
+import { Check, Send } from 'lucide-react';
 
 interface RegistrationDeskProps {
   activeStaff: StaffProfile;
   onPatientIssued: () => void;
-  onNavigateToDashboard: () => void;
+  onNavigateToDashboard: (tokenNumber?: string) => void;
 }
 
 interface PreSeedTestCase {
@@ -279,7 +272,7 @@ export const RegistrationDesk: React.FC<RegistrationDeskProps> = ({
           </div>
           <button
             type="button"
-            onClick={onNavigateToDashboard}
+            onClick={() => onNavigateToDashboard(successBanner.tokenNumber)}
             className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg transition"
           >
             View in Queue &rarr;
@@ -418,45 +411,47 @@ export const RegistrationDesk: React.FC<RegistrationDeskProps> = ({
             </div>
           </div>
 
-          {/* Instant Live Result Preview Banner */}
-          <div
-            className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition ${
-              previewTriage.priority === 'IMMEDIATE'
-                ? 'bg-red-50 border-red-300 text-red-900'
-                : previewTriage.priority === 'SOON'
-                ? 'bg-amber-50 border-amber-300 text-amber-900'
-                : 'bg-emerald-50 border-emerald-300 text-emerald-900'
-            }`}
-          >
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs uppercase font-extrabold tracking-wider">
-                  Live Triage Result:
-                </span>
-                <span
-                  className={`text-xs font-black px-2 py-0.5 rounded-full ${
-                    previewTriage.priority === 'IMMEDIATE'
-                      ? 'bg-red-600 text-white'
-                      : previewTriage.priority === 'SOON'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-emerald-600 text-white'
-                  }`}
-                >
-                  {previewTriage.priority}
-                </span>
-                {previewTriage.isFailSafeEscalation && (
-                  <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded">
-                    Fail-Safe Escalated
+          {/* Live Result Evaluation - displayed once user enters clinical data */}
+          {chiefComplaint.trim().length > 0 && (
+            <div
+              className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition ${
+                previewTriage.priority === 'IMMEDIATE'
+                  ? 'bg-red-50 border-red-300 text-red-900'
+                  : previewTriage.priority === 'SOON'
+                  ? 'bg-amber-50 border-amber-300 text-amber-900'
+                  : 'bg-emerald-50 border-emerald-300 text-emerald-900'
+              }`}
+            >
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs uppercase font-extrabold tracking-wider">
+                    Calculated Triage:
                   </span>
-                )}
+                  <span
+                    className={`text-xs font-black px-2 py-0.5 rounded-full ${
+                      previewTriage.priority === 'IMMEDIATE'
+                        ? 'bg-red-600 text-white'
+                        : previewTriage.priority === 'SOON'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-emerald-600 text-white'
+                    }`}
+                  >
+                    {previewTriage.priority}
+                  </span>
+                  {previewTriage.isFailSafeEscalation && (
+                    <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded">
+                      Fail-Safe Escalated
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs font-medium">{previewTriage.clinicalRationale}</p>
               </div>
-              <p className="text-xs font-medium">{previewTriage.clinicalRationale}</p>
-            </div>
 
-            <div className="text-[11px] font-mono text-slate-600 shrink-0">
-              Staff: {activeStaff.badgeNumber}
+              <div className="text-[11px] font-mono text-slate-600 shrink-0">
+                Staff: {activeStaff.badgeNumber}
+              </div>
             </div>
-          </div>
+          )}
 
           {errorMessage && (
             <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl">

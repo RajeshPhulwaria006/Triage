@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { DEFAULT_STAFF_PROFILES, Patient, QueueSummary, StaffProfile } from '@/types/triage';
+import { DEFAULT_STAFF_PROFILES, QueueSummary, StaffProfile } from '@/types/triage';
 import { Header } from '@/components/Header';
 import { RegistrationDesk } from '@/components/RegistrationDesk';
 
@@ -20,7 +20,6 @@ export default function RegisterPage() {
   });
   const [staffProfiles, setStaffProfiles] = useState<StaffProfile[]>(DEFAULT_STAFF_PROFILES);
   const [activeStaff, setActiveStaff] = useState<StaffProfile>(DEFAULT_STAFF_PROFILES[0]);
-  const [isPolling, setIsPolling] = useState<boolean>(true);
 
   const fetchQueueSummary = useCallback(async () => {
     try {
@@ -58,7 +57,7 @@ export default function RegisterPage() {
         staffProfiles={staffProfiles}
         activeStaff={activeStaff}
         onStaffChange={setActiveStaff}
-        isPolling={isPolling}
+        isPolling={true}
         onManualRefresh={fetchQueueSummary}
         onResetSeedData={handleReset}
         waitingCount={summary.totalWaiting}
@@ -68,7 +67,9 @@ export default function RegisterPage() {
         <RegistrationDesk
           activeStaff={activeStaff}
           onPatientIssued={fetchQueueSummary}
-          onNavigateToDashboard={() => router.push('/dashboard')}
+          onNavigateToDashboard={(token) => {
+            router.push(token ? `/dashboard?token=${token}` : '/dashboard');
+          }}
         />
       </main>
       <footer className="border-t border-slate-200 bg-white py-3 text-center text-xs text-slate-500">

@@ -23,6 +23,7 @@ export default function OPDPlatformPage() {
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([]);
   const [staffProfiles, setStaffProfiles] = useState<StaffProfile[]>(DEFAULT_STAFF_PROFILES);
   const [activeStaff, setActiveStaff] = useState<StaffProfile>(DEFAULT_STAFF_PROFILES[0]);
+  const [highlightedToken, setHighlightedToken] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -163,7 +164,16 @@ export default function OPDPlatformPage() {
               <RegistrationDesk
                 activeStaff={activeStaff}
                 onPatientIssued={refreshAll}
-                onNavigateToDashboard={() => setActiveTab('DASHBOARD')}
+                onNavigateToDashboard={(token) => {
+                  if (token) setHighlightedToken(token);
+                  setActiveTab('DASHBOARD');
+                  setTimeout(() => {
+                    if (token) {
+                      const el = document.getElementById(`patient-card-${token}`);
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }, 100);
+                }}
               />
             )}
 
@@ -172,6 +182,7 @@ export default function OPDPlatformPage() {
                 patients={patients}
                 summary={summary}
                 activeStaff={activeStaff}
+                highlightedToken={highlightedToken}
                 onCommitOverride={handleCommitOverride}
                 onUpdateStatus={handleUpdateStatus}
                 onNavigateToRegister={() => setActiveTab('REGISTER')}

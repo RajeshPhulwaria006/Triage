@@ -20,6 +20,8 @@ import {
 } from '@/types/triage';
 import { evaluateTriage } from './triage';
 import { walStorage, WalRecord } from './wal';
+import { getSql, isPostgresConfigured, initializeDatabase } from './db';
+import { seedPostgresDatabase } from './seed-db';
 
 export { DEFAULT_STAFF_PROFILES };
 
@@ -211,6 +213,50 @@ class OPDStore {
 
   constructor() {
     this.initializeFromWalOrSeed();
+    this.syncFromPostgresIfAvailable();
+  }
+
+  private async syncFromPostgresIfAvailable(): Promise<void> {
+    if (!isPostgresConfigured()) return;
+    try {
+      await initializeDatabase();
+      await seedPostgresDatabase();
+      const sql = getSql();
+      if (!sql) return;
+
+      const rows = await sql`
+        SELECT * FROM patients ORDER BY created_at ASC
+      `;
+
+      if (rows.length > 0) {
+        for (const r of rows) {
+          const patient: Patient = {
+            id: r.id,
+            tokenNumber: r.token_number,
+            patientName: r.patient_name,
+            age: r.age,
+            gender: r.gender,
+            chiefComplaint: r.chief_complaint,
+            vitals: (r.vitals as Record<string, unknown>) || {},
+            systemPriority: r.system_priority,
+            currentPriority: r.current_priority,
+            clinicalRationale: r.clinical_rationale,
+            matchedRules: Array.isArray(r.matched_rules) ? r.matched_rules : [],
+            isFailSafeEscalation: Boolean(r.is_fail_safe_escalation),
+            isOverridden: Boolean(r.is_overridden),
+            overrideJustification: r.override_reason || undefined,
+            overriddenBy: r.overridden_by || undefined,
+            overriddenAt: r.overridden_at ? new Date(r.overridden_at).toISOString() : undefined,
+            status: r.status,
+            createdAt: new Date(r.created_at).toISOString(),
+            updatedAt: new Date(r.updated_at).toISOString(),
+          };
+          this.patients.set(patient.id, patient);
+        }
+      }
+    } catch (err) {
+      console.warn('[Postgres Sync] Notice:', err);
+    }
   }
 
   private initializeFromWalOrSeed(): void {
@@ -406,6 +452,41 @@ class OPDStore {
 
     this.patients.set(patient.id, patient);
 
+    // Asynchronously insert into PostgreSQL if configured
+    if (isPostgresConfigured()) {
+      const sql = getSql();
+      if (sql) {
+        sql`
+          INSERT INTO patients (
+            id, token_number, patient_name, age, gender, chief_complaint, vitals,
+            system_priority, current_priority, clinical_rationale, matched_rules,
+            is_fail_safe_escalation, is_overridden, status, created_at, updated_at
+          ) VALUES (
+            ${patient.id},
+            ${patient.tokenNumber},
+            ${patient.patientName},
+            ${patient.age},
+            ${patient.gender},
+            ${patient.chiefComplaint},
+            ${JSON.stringify(patient.vitals)},
+            ${patient.systemPriority},
+            ${patient.currentPriority},
+            ${patient.clinicalRationale},
+            ${JSON.stringify(patient.matchedRules)},
+            ${patient.isFailSafeEscalation},
+            ${patient.isOverridden},
+            ${patient.status},
+            ${patient.createdAt},
+            ${patient.updatedAt}
+          )
+          ON CONFLICT (id) DO UPDATE SET
+            current_priority = EXCLUDED.current_priority,
+            status = EXCLUDED.status,
+            updated_at = EXCLUDED.updated_at
+        `.catch((err) => console.warn('[Postgres Insert Patient] Notice:', err));
+      }
+    }
+
     this.recordAuditEntry({
       tokenNumber: patient.tokenNumber,
       patientId: patient.id,
@@ -456,9 +537,24 @@ class OPDStore {
     patient.overrideJustification = trimmedJustification;
     patient.overriddenBy = staffBadge;
     patient.overriddenAt = now;
-    patient.updatedAt = now;
-
     this.patients.set(patientId, patient);
+
+    // Asynchronously update PostgreSQL if configured
+    if (isPostgresConfigured()) {
+      const sql = getSql();
+      if (sql) {
+        sql`
+          UPDATE patients SET
+            current_priority = ${newPriority},
+            is_overridden = TRUE,
+            override_reason = ${trimmedJustification},
+            overridden_by = ${staffBadge},
+            overridden_at = ${now},
+            updated_at = ${now}
+          WHERE id = ${patientId}
+        `.catch((err) => console.warn('[Postgres Update Override] Notice:', err));
+      }
+    }
 
     this.recordAuditEntry({
       tokenNumber: patient.tokenNumber,
@@ -493,6 +589,18 @@ class OPDStore {
 
     patient.status = status;
     patient.updatedAt = now;
+
+    if (isPostgresConfigured()) {
+      const sql = getSql();
+      if (sql) {
+        sql`
+          UPDATE patients SET
+            status = ${status},
+            updated_at = ${now}
+          WHERE id = ${patientId}
+        `.catch((err) => console.warn('[Postgres Update Status] Notice:', err));
+      }
+    }
 
     this.recordAuditEntry({
       tokenNumber: patient.tokenNumber,
@@ -552,6 +660,31 @@ class OPDStore {
       ...entry,
     };
     this.auditLogs.unshift(fullEntry);
+
+    if (isPostgresConfigured()) {
+      const sql = getSql();
+      if (sql) {
+        sql`
+          INSERT INTO audit_logs (
+            id, audit_sequence, timestamp, token_number, patient_id, patient_name,
+            event_type, old_priority, new_priority, justification, staff_badge
+          ) VALUES (
+            ${fullEntry.id},
+            ${fullEntry.auditSequence},
+            ${fullEntry.timestamp},
+            ${fullEntry.tokenNumber},
+            ${fullEntry.patientId},
+            ${fullEntry.patientName},
+            ${fullEntry.eventType},
+            ${fullEntry.oldPriority || null},
+            ${fullEntry.newPriority},
+            ${fullEntry.justification},
+            ${fullEntry.staffBadge}
+          )
+          ON CONFLICT (id) DO NOTHING
+        `.catch((err) => console.warn('[Postgres Insert Audit] Notice:', err));
+      }
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Patient, PriorityLevel, QueueSummary, StaffProfile } from '@/types/triage';
 import { OverrideModal } from './OverrideModal';
 import {
@@ -8,7 +8,6 @@ import {
   Clock,
   CheckCircle2,
   SlidersHorizontal,
-  ChevronRight,
   PhoneCall,
   Check,
 } from 'lucide-react';
@@ -17,6 +16,7 @@ interface NurseDashboardProps {
   patients: Patient[];
   summary: QueueSummary;
   activeStaff: StaffProfile;
+  highlightedToken?: string | null;
   onCommitOverride: (
     patientId: string,
     newPriority: PriorityLevel,
@@ -30,6 +30,7 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({
   patients,
   summary,
   activeStaff,
+  highlightedToken,
   onCommitOverride,
   onUpdateStatus,
   onNavigateToRegister,
@@ -39,6 +40,17 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({
   );
   const [priorityFilter, setPriorityFilter] = useState<'ALL' | PriorityLevel>('ALL');
 
+  React.useEffect(() => {
+    if (highlightedToken) {
+      setTimeout(() => {
+        const el = document.getElementById(`patient-card-${highlightedToken}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 150);
+    }
+  }, [highlightedToken]);
+
   const displayedPatients = patients.filter((p) => {
     if (priorityFilter !== 'ALL' && p.currentPriority !== priorityFilter) {
       return false;
@@ -46,10 +58,19 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({
     return p.status === 'WAITING' || p.status === 'IN_CONSULTATION';
   });
 
+  const [currentTime, setCurrentTime] = useState<number>(0);
+
+  useEffect(() => {
+    setCurrentTime(Date.now());
+    const timer = setInterval(() => setCurrentTime(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
   const formatWaitTime = (createdAt: string) => {
+    if (!currentTime) return 'Just now';
     const elapsedMinutes = Math.max(
       0,
-      Math.floor((Date.now() - new Date(createdAt).getTime()) / (60 * 1000))
+      Math.floor((currentTime - new Date(createdAt).getTime()) / (60 * 1000))
     );
     if (elapsedMinutes < 1) return 'Just now';
     if (elapsedMinutes === 1) return '1m ago';
@@ -152,10 +173,15 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({
               patient.vitals.spo2 ||
               patient.vitals.temperature;
 
+            const isHighlighted = highlightedToken && patient.tokenNumber === highlightedToken;
+
             return (
               <div
                 key={patient.id}
+                id={`patient-card-${patient.tokenNumber}`}
                 className={`bg-white rounded-2xl border transition-all p-4 sm:p-5 shadow-2xs hover:shadow-xs ${
+                  isHighlighted ? 'ring-3 ring-blue-500 shadow-md animate-pulse' : ''
+                } ${
                   isImmediate
                     ? 'border-l-6 border-l-red-600 border-slate-200 bg-red-50/20'
                     : isSoon

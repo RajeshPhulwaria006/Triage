@@ -42,6 +42,7 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({
 
   React.useEffect(() => {
     if (highlightedToken) {
+      setPriorityFilter('ALL');
       setTimeout(() => {
         const el = document.getElementById(`patient-card-${highlightedToken}`);
         if (el) {

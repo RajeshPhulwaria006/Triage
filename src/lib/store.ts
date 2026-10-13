@@ -418,12 +418,26 @@ class OPDStore {
     return this.patients.get(id);
   }
 
+  private getNextAvailableToken(): string {
+    let maxToken = 135;
+    for (const p of this.patients.values()) {
+      const num = parseInt(p.tokenNumber, 10);
+      if (!isNaN(num) && num > maxToken) {
+        maxToken = num;
+      }
+    }
+    this.tokenIndexCounter = Math.max(this.tokenIndexCounter, maxToken) + 1;
+    return String(this.tokenIndexCounter);
+  }
+
   public createPatient(
     input: TriageInput,
     staffBadge: string,
     explicitToken?: string
   ): Patient {
-    const token = explicitToken || String(++this.tokenIndexCounter);
+    const token = (explicitToken && !this.patients.has(`pat-${explicitToken}`)) 
+      ? explicitToken 
+      : this.getNextAvailableToken();
     const now = new Date().toISOString();
     const triage = evaluateTriage(input, now);
 

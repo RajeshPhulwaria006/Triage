@@ -163,7 +163,7 @@ async function runAllTests() {
       age: 42,
       gender: 'MALE',
       chiefComplaint: 'Mild wrist sprain after fall',
-      vitals: { spo2: 99, heartRate: 72 },
+      vitals: { spo2: 99, pulse: 72 },
     },
     'STAFF-TEST',
     '777'

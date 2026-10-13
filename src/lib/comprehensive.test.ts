@@ -15,7 +15,6 @@ import { evaluateTriage } from './triage';
 import { walStorage } from './wal';
 import { opdStore } from './store';
 import { initializeDatabase, isPostgresConfigured } from './db';
-import { TriageInput } from '@/types/triage';
 
 let passedCount = 0;
 let failedCount = 0;

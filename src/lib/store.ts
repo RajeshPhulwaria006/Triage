@@ -15,7 +15,6 @@ import {
   PatientStatus,
   PriorityLevel,
   QueueSummary,
-  StaffProfile,
   TriageInput,
 } from '@/types/triage';
 import { evaluateTriage } from './triage';
@@ -401,9 +400,13 @@ class OPDStore {
     }
   }
 
-  public getPatients(filterStatus?: PatientStatus): Patient[] {
+  public getPatients(filterStatus?: PatientStatus, targetDate?: string): Patient[] {
     const list = Array.from(this.patients.values());
-    const filtered = filterStatus ? list.filter((p) => p.status === filterStatus) : list;
+    let filtered = filterStatus ? list.filter((p) => p.status === filterStatus) : list;
+
+    if (targetDate) {
+      filtered = filtered.filter((p) => p.createdAt.startsWith(targetDate));
+    }
 
     return filtered.sort((a, b) => {
       const rankDiff = PRIORITY_RANK[a.currentPriority] - PRIORITY_RANK[b.currentPriority];
@@ -418,16 +421,30 @@ class OPDStore {
     return this.patients.get(id);
   }
 
-  private getNextAvailableToken(): string {
-    let maxToken = 135;
+  /**
+   * Generates sequential token numbers scoped to the current day.
+   * If existing tokens are numeric, it assigns the next sequential integer (1, 2, 3... or 136, 137...).
+   * When midnight passes (new calendar date), tokens restart from 1 for the new day's OPD session.
+   */
+  private getNextAvailableToken(nowIsoString: string): string {
+    const todayPrefix = nowIsoString.split('T')[0];
+    let maxTokenToday = 0;
+
     for (const p of this.patients.values()) {
-      const num = parseInt(p.tokenNumber, 10);
-      if (!isNaN(num) && num > maxToken) {
-        maxToken = num;
+      const patientDate = p.createdAt.split('T')[0];
+      if (patientDate === todayPrefix) {
+        const num = parseInt(p.tokenNumber, 10);
+        if (!isNaN(num) && num > maxTokenToday) {
+          maxTokenToday = num;
+        }
       }
     }
-    this.tokenIndexCounter = Math.max(this.tokenIndexCounter, maxToken) + 1;
-    return String(this.tokenIndexCounter);
+
+    // If it is a fresh day with no previous patients, start at 1.
+    // If today already has patients, increment by 1.
+    const nextNum = maxTokenToday > 0 ? maxTokenToday + 1 : 1;
+    this.tokenIndexCounter = Math.max(this.tokenIndexCounter, nextNum);
+    return String(nextNum);
   }
 
   public createPatient(
@@ -435,10 +452,10 @@ class OPDStore {
     staffBadge: string,
     explicitToken?: string
   ): Patient {
+    const now = new Date().toISOString();
     const token = (explicitToken && !this.patients.has(`pat-${explicitToken}`)) 
       ? explicitToken 
-      : this.getNextAvailableToken();
-    const now = new Date().toISOString();
+      : this.getNextAvailableToken(now);
     const triage = evaluateTriage(input, now);
 
     const patient: Patient = {

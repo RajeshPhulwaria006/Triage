@@ -9,7 +9,6 @@
  */
 
 import { opdStore } from './store';
-import { evaluateTriage } from './triage';
 
 async function runE2EVerification() {
   console.log('================================================================');

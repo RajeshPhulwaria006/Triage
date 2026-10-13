@@ -14,7 +14,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import { AuditEntry, Patient, PriorityLevel, PatientStatus, TriageInput } from '@/types/triage';
 
 export type WalActionType = 'TOKEN_ISSUED' | 'CLINICAL_OVERRIDE' | 'STATUS_CHANGED' | 'SYSTEM_RESET';
 

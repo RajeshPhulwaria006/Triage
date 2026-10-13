@@ -10,7 +10,6 @@
  */
 
 import postgres from 'postgres';
-import { Patient, AuditEntry, PriorityLevel, PatientStatus, TriageInput, StaffProfile, DEFAULT_STAFF_PROFILES } from '@/types/triage';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 

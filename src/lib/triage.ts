@@ -12,7 +12,7 @@
  * 3. Transparent Explainability: Every decision produces a clinically verifiable rationale.
  */
 
-import { PriorityLevel, TriageInput, TriageResult, Vitals } from '@/types/triage';
+import { TriageInput, TriageResult, Vitals } from '@/types/triage';
 
 /** Keywords indicative of imminent life-threat or acute coronary/respiratory syndromes. */
 const IMMEDIATE_SYMPTOM_PATTERNS = [

@@ -11,8 +11,9 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const statusParam = searchParams.get('status') as PatientStatus | null;
+    const dateParam = searchParams.get('date'); // Format: YYYY-MM-DD
 
-    const patients = opdStore.getPatients(statusParam || undefined);
+    const patients = opdStore.getPatients(statusParam || undefined, dateParam || undefined);
     const summary = opdStore.getQueueSummary();
 
     return NextResponse.json({

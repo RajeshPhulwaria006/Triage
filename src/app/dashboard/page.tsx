@@ -23,7 +23,7 @@ function DashboardContent() {
   });
   const [staffProfiles, setStaffProfiles] = useState<StaffProfile[]>(DEFAULT_STAFF_PROFILES);
   const [activeStaff, setActiveStaff] = useState<StaffProfile>(DEFAULT_STAFF_PROFILES[0]);
-  const [isPolling, setIsPolling] = useState<boolean>(true);
+  const [isPolling] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchQueueData = useCallback(async () => {

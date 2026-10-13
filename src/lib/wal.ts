@@ -61,8 +61,12 @@ export class WalStorage {
   }
 
   private ensureDirectory(): void {
-    if (!fs.existsSync(WAL_DIR)) {
-      fs.mkdirSync(WAL_DIR, { recursive: true });
+    try {
+      if (!fs.existsSync(WAL_DIR)) {
+        fs.mkdirSync(WAL_DIR, { recursive: true });
+      }
+    } catch (err) {
+      console.warn('[WAL Storage] Notice: Could not create data directory:', err);
     }
   }
 
@@ -103,8 +107,12 @@ export class WalStorage {
       checksum,
     };
 
-    const line = JSON.stringify(record) + '\n';
-    fs.appendFileSync(WAL_FILE_PATH, line, { encoding: 'utf-8' });
+    try {
+      const line = JSON.stringify(record) + '\n';
+      fs.appendFileSync(WAL_FILE_PATH, line, { encoding: 'utf-8' });
+    } catch (err) {
+      console.warn('[WAL Storage] Notice: Disk append skipped due to filesystem permissions:', err);
+    }
 
     return record;
   }
@@ -152,7 +160,11 @@ export class WalStorage {
    */
   public truncateLog(): void {
     this.ensureDirectory();
-    fs.writeFileSync(WAL_FILE_PATH, '', { encoding: 'utf-8' });
+    try {
+      fs.writeFileSync(WAL_FILE_PATH, '', { encoding: 'utf-8' });
+    } catch (err) {
+      console.warn('[WAL Storage] Notice: Disk truncate skipped due to filesystem permissions:', err);
+    }
     this.seqCounter = 0;
   }
 

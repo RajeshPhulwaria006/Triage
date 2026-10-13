@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  opd-flow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: opd_flow_service
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    volumes:
+      # Durable host volume mount for Write-Ahead Log (WAL) persistence
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/queue || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

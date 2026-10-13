@@ -120,9 +120,9 @@ export default function OPDPlatformPage() {
     }
   };
 
-  // Reset to default hackathon demo seeds
+  // Reset to default seed queue
   const handleResetSeedData = async () => {
-    if (confirm('Reset OPD Flow queue to default hackathon demo seeds?')) {
+    if (confirm('Reset patient queue to initial demonstration state?')) {
       const res = await fetch('/api/reset', { method: 'POST' });
       if (res.ok) {
         await refreshAll();
@@ -189,10 +189,10 @@ export default function OPDPlatformPage() {
       <footer className="border-t border-slate-200 bg-white py-3.5 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2">
           <span>
-            Dr. S.N. Medical College, Jodhpur • OPD Flow Clinical Triage Engine
+            Dr. S.N. Medical College, Jodhpur • Triage Clinical Prioritization System
           </span>
           <span className="font-mono text-[11px] text-slate-500">
-            Aayu 2026 AI Medical Hackathon • Track 01 Compliant
+            Emergency & Outpatient Care
           </span>
         </div>
       </footer>

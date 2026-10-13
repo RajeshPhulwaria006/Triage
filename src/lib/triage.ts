@@ -106,6 +106,34 @@ function matchesAnyPattern(text: string, patterns: string[]): string | null {
 }
 
 /**
+ * Detects cardiorespiratory presentations, including variations like "mild pain in chest",
+ * "chest discomfort", "seene me dard", etc.
+ */
+function detectCardioRespiratoryPattern(text: string): string | null {
+  const directMatch = matchesAnyPattern(text, IMMEDIATE_SYMPTOM_PATTERNS);
+  if (directMatch) return directMatch;
+
+  const norm = text.toLowerCase();
+  const hasChestWord =
+    norm.includes('chest') || norm.includes('chhati') || norm.includes('seene');
+  const hasPainWord =
+    norm.includes('pain') ||
+    norm.includes('tight') ||
+    norm.includes('press') ||
+    norm.includes('dard') ||
+    norm.includes('jalan') ||
+    norm.includes('discomfort') ||
+    norm.includes('heav') ||
+    norm.includes('ache');
+
+  if (hasChestWord && hasPainWord) {
+    return 'chest pain/discomfort presentation';
+  }
+
+  return null;
+}
+
+/**
  * Validates whether all vital fields are absent or undefined.
  */
 function areAllVitalsMissing(vitals: Vitals): boolean {
@@ -194,7 +222,7 @@ export function evaluateTriage(input: TriageInput, timestamp?: string): TriageRe
 
   // 1e. High-Risk Acute Coronary / Respiratory Presentation
   // Symptoms containing chest pain/tightness, breathlessness, etc. -> if age > 35, prioritize IMMEDIATE
-  const immediateSymptomMatch = matchesAnyPattern(normalizedComplaint, IMMEDIATE_SYMPTOM_PATTERNS);
+  const immediateSymptomMatch = detectCardioRespiratoryPattern(normalizedComplaint);
   if (immediateSymptomMatch) {
     if (age > 35) {
       matchedRules.push(

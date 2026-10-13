@@ -55,7 +55,7 @@ export default function AuditPage() {
   }, [fetchAuditData]);
 
   const handleReset = async () => {
-    if (confirm('Reset OPD Flow queue to default hackathon demo seeds?')) {
+    if (confirm('Reset patient queue to initial demonstration state?')) {
       const res = await fetch('/api/reset', { method: 'POST' });
       if (res.ok) await fetchAuditData();
     }

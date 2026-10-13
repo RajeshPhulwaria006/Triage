@@ -10,6 +10,7 @@
 
 import {
   AuditEntry,
+  DEFAULT_STAFF_PROFILES,
   Patient,
   PatientStatus,
   PriorityLevel,
@@ -20,36 +21,7 @@ import {
 import { evaluateTriage } from './triage';
 import { walStorage, WalRecord } from './wal';
 
-export const DEFAULT_STAFF_PROFILES: StaffProfile[] = [
-  {
-    id: 'staff-1',
-    name: 'Staff Nurse Sunita Sharma',
-    role: 'Staff Nurse (Triage Station 1)',
-    badgeNumber: 'SN-402',
-    department: 'Emergency & Acute OPD',
-  },
-  {
-    id: 'staff-2',
-    name: 'Triage Officer Dr. R.K. Mathur',
-    role: 'Triage Medical Officer',
-    badgeNumber: 'TO-108',
-    department: 'Central Triage Wing',
-  },
-  {
-    id: 'staff-3',
-    name: 'Desk Assistant Ramesh Kumar',
-    role: 'Registration Executive',
-    badgeNumber: 'DA-014',
-    department: 'OPD Counter 2',
-  },
-  {
-    id: 'staff-4',
-    name: 'Senior Resident Dr. Sneha Vyas',
-    role: 'OPD Doctor On-Duty',
-    badgeNumber: 'SR-210',
-    department: 'Internal Medicine OPD Room 12',
-  },
-];
+export { DEFAULT_STAFF_PROFILES };
 
 const PRIORITY_RANK: Record<PriorityLevel, number> = {
   IMMEDIATE: 1,
@@ -57,20 +29,190 @@ const PRIORITY_RANK: Record<PriorityLevel, number> = {
   ROUTINE: 3,
 };
 
+interface SeedPatientConfig {
+  tokenNumber: string;
+  name: string;
+  age: number;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  complaint: string;
+  vitals: {
+    systolicBp?: number;
+    diastolicBp?: number;
+    pulse?: number;
+    spo2?: number;
+    temperature?: number;
+  };
+  minutesAgo: number;
+  staffBadge: string;
+}
+
+const RICH_SEED_PATIENTS: SeedPatientConfig[] = [
+  // 1. Mandatory Test Case 1: Token 87 (Chest Tightness in 60y - IMMEDIATE)
+  {
+    tokenNumber: '87',
+    name: 'Ramprasad Sharma',
+    age: 60,
+    gender: 'MALE',
+    complaint: 'Tightness in chest, severe sweating',
+    vitals: { systolicBp: 155, diastolicBp: 95, pulse: 112, spo2: 93, temperature: 98.4 },
+    minutesAgo: 4,
+    staffBadge: 'TO-108 (Triage Officer Dr. Mathur)',
+  },
+  // 2. Critical Hypoxia: Token 102 (SpO2 86% - IMMEDIATE)
+  {
+    tokenNumber: '102',
+    name: 'Savitri Bai',
+    age: 52,
+    gender: 'FEMALE',
+    complaint: 'chhati me dard aur saas lene me bahut dikkat',
+    vitals: { systolicBp: 160, diastolicBp: 98, pulse: 124, spo2: 86, temperature: 99.1 },
+    minutesAgo: 6,
+    staffBadge: 'SN-402 (Staff Nurse Sunita)',
+  },
+  // 3. Hypertensive Crisis: Token 114 (SBP 218 - IMMEDIATE)
+  {
+    tokenNumber: '114',
+    name: 'Gopal Lal',
+    age: 58,
+    gender: 'MALE',
+    complaint: 'Severe occipital headache, epistaxis and blurred vision',
+    vitals: { systolicBp: 218, diastolicBp: 122, pulse: 92, spo2: 97, temperature: 98.6 },
+    minutesAgo: 9,
+    staffBadge: 'TO-108 (Triage Officer Dr. Mathur)',
+  },
+  // 4. Collapse / Trauma: Token 129 (Unconscious - IMMEDIATE)
+  {
+    tokenNumber: '129',
+    name: 'Mohammed Irfan',
+    age: 19,
+    gender: 'MALE',
+    complaint: 'Collapse and unconscious post road traffic fall',
+    vitals: { systolicBp: 88, diastolicBp: 54, pulse: 138, spo2: 91, temperature: 97.8 },
+    minutesAgo: 2,
+    staffBadge: 'SN-402 (Staff Nurse Sunita)',
+  },
+  // 5. Acute Abdominal Distress: Token 54 (Pet dard - SOON)
+  {
+    tokenNumber: '54',
+    name: 'Rajesh Bishnoi',
+    age: 45,
+    gender: 'MALE',
+    complaint: 'Pet dard and vomiting for 2 days',
+    vitals: { systolicBp: 138, diastolicBp: 88, pulse: 108, spo2: 97, temperature: 100.2 },
+    minutesAgo: 14,
+    staffBadge: 'SN-402 (Staff Nurse Sunita)',
+  },
+  // 6. Mandatory Test Case 3: Token 62 (Partial vitals elderly fail-safe - SOON)
+  {
+    tokenNumber: '62',
+    name: 'Kamla Devi',
+    age: 62,
+    gender: 'FEMALE',
+    complaint: 'Chakkar and ghabrahat',
+    vitals: {},
+    minutesAgo: 16,
+    staffBadge: 'DA-014 (Desk Assistant Ramesh)',
+  },
+  // 7. Active Trauma Bleeding: Token 71 (Hand laceration - SOON)
+  {
+    tokenNumber: '71',
+    name: 'Sunita Gurjar',
+    age: 29,
+    gender: 'FEMALE',
+    complaint: 'Active bleeding from hand laceration post crop machine cut',
+    vitals: { systolicBp: 118, diastolicBp: 76, pulse: 104, spo2: 98, temperature: 98.4 },
+    minutesAgo: 19,
+    staffBadge: 'DA-014 (Desk Assistant Ramesh)',
+  },
+  // 8. Pediatric High Pyrexia: Token 77 (Temp 102.8°F - SOON)
+  {
+    tokenNumber: '77',
+    name: 'Master Aarav',
+    age: 4,
+    gender: 'MALE',
+    complaint: 'Tez bukhar since midnight, lethargic and not eating',
+    vitals: { pulse: 128, spo2: 97, temperature: 102.8 },
+    minutesAgo: 21,
+    staffBadge: 'SN-402 (Staff Nurse Sunita)',
+  },
+  // 9. Elderly Vague Systemic: Token 83 (Weakness, missing vitals - SOON)
+  {
+    tokenNumber: '83',
+    name: 'Rameshwar Prasad',
+    age: 68,
+    gender: 'MALE',
+    complaint: 'Severe body weakness and unable to stand',
+    vitals: {},
+    minutesAgo: 24,
+    staffBadge: 'DA-014 (Desk Assistant Ramesh)',
+  },
+  // 10. Mandatory Test Case 2: Token 23 (Routine Refill - ROUTINE)
+  {
+    tokenNumber: '23',
+    name: 'Priya Verma',
+    age: 24,
+    gender: 'FEMALE',
+    complaint: 'Routine thyroid refill follow-up',
+    vitals: { systolicBp: 118, diastolicBp: 76, pulse: 72, spo2: 99, temperature: 98.2 },
+    minutesAgo: 38,
+    staffBadge: 'DA-014 (Desk Assistant Ramesh)',
+  },
+  // 11. Report Review: Token 31 (Routine follow up - ROUTINE)
+  {
+    tokenNumber: '31',
+    name: 'Dr. Anil Vyas (Retd)',
+    age: 70,
+    gender: 'MALE',
+    complaint: 'Blood report dikhana and regular chronic checkup',
+    vitals: { systolicBp: 124, diastolicBp: 80, pulse: 74, spo2: 98, temperature: 98.4 },
+    minutesAgo: 32,
+    staffBadge: 'DA-014 (Desk Assistant Ramesh)',
+  },
+  // 12. Dermatology Rash: Token 42 (Routine rash - ROUTINE)
+  {
+    tokenNumber: '42',
+    name: 'Manju Choudhary',
+    age: 38,
+    gender: 'FEMALE',
+    complaint: 'Khujli and mild rash on both hands for 1 week',
+    vitals: { pulse: 76, spo2: 98, temperature: 98.2 },
+    minutesAgo: 29,
+    staffBadge: 'DA-014 (Desk Assistant Ramesh)',
+  },
+  // 13. Suture Removal: Token 91 (Routine procedure - ROUTINE)
+  {
+    tokenNumber: '91',
+    name: 'Manish Soni',
+    age: 31,
+    gender: 'MALE',
+    complaint: 'Dressing change and stitch removal post-biopsy',
+    vitals: { pulse: 74, spo2: 98 },
+    minutesAgo: 11,
+    staffBadge: 'DA-014 (Desk Assistant Ramesh)',
+  },
+  // 14. Antenatal Refill: Token 95 (Routine vitamins - ROUTINE)
+  {
+    tokenNumber: '95',
+    name: 'Geeta Meena',
+    age: 26,
+    gender: 'FEMALE',
+    complaint: 'Second trimester routine calcium & iron refill',
+    vitals: { systolicBp: 112, diastolicBp: 72, pulse: 80, spo2: 99, temperature: 98.4 },
+    minutesAgo: 7,
+    staffBadge: 'DA-014 (Desk Assistant Ramesh)',
+  },
+];
+
 class OPDStore {
   private patients: Map<string, Patient> = new Map();
   private auditLogs: AuditEntry[] = [];
   private sequenceCounter: number = 100;
-  private tokenIndexCounter: number = 92;
+  private tokenIndexCounter: number = 135;
 
   constructor() {
     this.initializeFromWalOrSeed();
   }
 
-  /**
-   * Initializes the store by replaying the Write-Ahead Log if present;
-   * otherwise seeds standard demonstration cases.
-   */
   private initializeFromWalOrSeed(): void {
     const { records, hasExistingData } = walStorage.replayLog();
 
@@ -81,9 +223,6 @@ class OPDStore {
     }
   }
 
-  /**
-   * Replays WAL records in chronological sequence to reconstruct exact state.
-   */
   private replayWalRecords(records: WalRecord[]): void {
     this.patients.clear();
     this.auditLogs = [];
@@ -158,259 +297,64 @@ class OPDStore {
     }
   }
 
-  /**
-   * Seeds realistic clinical cases and commits them to the WAL log.
-   */
   public seedInitialData(): void {
     walStorage.truncateLog();
     this.patients.clear();
     this.auditLogs = [];
     this.sequenceCounter = 100;
-    this.tokenIndexCounter = 92;
+    this.tokenIndexCounter = 135;
 
     const baseTime = Date.now();
 
-    // 1. Token 23: Routine thyroid refill (arrived 15m ago)
-    const t23Time = new Date(baseTime - 15 * 60 * 1000).toISOString();
-    const p23Input: TriageInput = {
-      patientName: 'Priya Verma',
-      age: 24,
-      gender: 'FEMALE',
-      chiefComplaint: 'Routine thyroid refill follow-up',
-      vitals: {
-        systolicBp: 118,
-        diastolicBp: 76,
-        pulse: 72,
-        spo2: 99,
-        temperature: 98.2,
-      },
-    };
-    const p23Triage = evaluateTriage(p23Input);
-    const p23: Patient = {
-      id: 'pat-23',
-      tokenNumber: '23',
-      ...p23Input,
-      systemPriority: p23Triage.priority,
-      currentPriority: p23Triage.priority,
-      clinicalRationale: p23Triage.clinicalRationale,
-      matchedRules: p23Triage.matchedRules,
-      isFailSafeEscalation: p23Triage.isFailSafeEscalation,
-      isOverridden: false,
-      status: 'WAITING',
-      createdAt: t23Time,
-      updatedAt: t23Time,
-    };
-    this.patients.set(p23.id, p23);
-    walStorage.appendRecord(
-      'TOKEN_ISSUED',
-      p23.id,
-      p23.tokenNumber,
-      p23 as unknown as Record<string, unknown>,
-      'DA-014 (Desk Assistant Ramesh)'
-    );
-    this.recordAuditEntry({
-      tokenNumber: '23',
-      patientId: p23.id,
-      patientName: p23.patientName,
-      eventType: 'TOKEN_ISSUED',
-      newPriority: p23.currentPriority,
-      justification: p23.clinicalRationale,
-      staffBadge: 'DA-014 (Desk Assistant Ramesh)',
-      timestamp: t23Time,
-    });
+    for (const seed of RICH_SEED_PATIENTS) {
+      const arrivedTime = new Date(baseTime - seed.minutesAgo * 60 * 1000).toISOString();
+      const input: TriageInput = {
+        patientName: seed.name,
+        age: seed.age,
+        gender: seed.gender,
+        chiefComplaint: seed.complaint,
+        vitals: seed.vitals,
+      };
 
-    // 2. Token 54: Pet dard / abdominal distress (arrived 10m ago)
-    const t54Time = new Date(baseTime - 10 * 60 * 1000).toISOString();
-    const p54Input: TriageInput = {
-      patientName: 'Rajesh Bishnoi',
-      age: 45,
-      gender: 'MALE',
-      chiefComplaint: 'Pet dard and vomiting for 2 days',
-      vitals: {
-        systolicBp: 138,
-        diastolicBp: 88,
-        pulse: 108,
-        spo2: 97,
-        temperature: 100.2,
-      },
-    };
-    const p54Triage = evaluateTriage(p54Input);
-    const p54: Patient = {
-      id: 'pat-54',
-      tokenNumber: '54',
-      ...p54Input,
-      systemPriority: p54Triage.priority,
-      currentPriority: p54Triage.priority,
-      clinicalRationale: p54Triage.clinicalRationale,
-      matchedRules: p54Triage.matchedRules,
-      isFailSafeEscalation: p54Triage.isFailSafeEscalation,
-      isOverridden: false,
-      status: 'WAITING',
-      createdAt: t54Time,
-      updatedAt: t54Time,
-    };
-    this.patients.set(p54.id, p54);
-    walStorage.appendRecord(
-      'TOKEN_ISSUED',
-      p54.id,
-      p54.tokenNumber,
-      p54 as unknown as Record<string, unknown>,
-      'SN-402 (Staff Nurse Sunita)'
-    );
-    this.recordAuditEntry({
-      tokenNumber: '54',
-      patientId: p54.id,
-      patientName: p54.patientName,
-      eventType: 'TOKEN_ISSUED',
-      newPriority: p54.currentPriority,
-      justification: p54.clinicalRationale,
-      staffBadge: 'SN-402 (Staff Nurse Sunita)',
-      timestamp: t54Time,
-    });
+      const triage = evaluateTriage(input, arrivedTime);
+      const patient: Patient = {
+        id: `pat-${seed.tokenNumber}`,
+        tokenNumber: seed.tokenNumber,
+        ...input,
+        systemPriority: triage.priority,
+        currentPriority: triage.priority,
+        clinicalRationale: triage.clinicalRationale,
+        matchedRules: triage.matchedRules,
+        isFailSafeEscalation: triage.isFailSafeEscalation,
+        isOverridden: false,
+        status: 'WAITING',
+        createdAt: arrivedTime,
+        updatedAt: arrivedTime,
+      };
 
-    // 3. Token 62: Partial Vitals Case - 62y female with "Chakkar and ghabrahat" (Fail-safe -> SOON)
-    const t62Time = new Date(baseTime - 8 * 60 * 1000).toISOString();
-    const p62Input: TriageInput = {
-      patientName: 'Kamla Devi',
-      age: 62,
-      gender: 'FEMALE',
-      chiefComplaint: 'Chakkar and ghabrahat',
-      vitals: {},
-    };
-    const p62Triage = evaluateTriage(p62Input);
-    const p62: Patient = {
-      id: 'pat-62',
-      tokenNumber: '62',
-      ...p62Input,
-      systemPriority: p62Triage.priority,
-      currentPriority: p62Triage.priority,
-      clinicalRationale: p62Triage.clinicalRationale,
-      matchedRules: p62Triage.matchedRules,
-      isFailSafeEscalation: p62Triage.isFailSafeEscalation,
-      isOverridden: false,
-      status: 'WAITING',
-      createdAt: t62Time,
-      updatedAt: t62Time,
-    };
-    this.patients.set(p62.id, p62);
-    walStorage.appendRecord(
-      'TOKEN_ISSUED',
-      p62.id,
-      p62.tokenNumber,
-      p62 as unknown as Record<string, unknown>,
-      'DA-014 (Desk Assistant Ramesh)'
-    );
-    this.recordAuditEntry({
-      tokenNumber: '62',
-      patientId: p62.id,
-      patientName: p62.patientName,
-      eventType: 'TOKEN_ISSUED',
-      newPriority: p62.currentPriority,
-      justification: p62.clinicalRationale,
-      staffBadge: 'DA-014 (Desk Assistant Ramesh)',
-      timestamp: t62Time,
-    });
+      this.patients.set(patient.id, patient);
 
-    // 4. Token 87: High-Risk Acute Coronary - arrived 3m ago (IMMEDIATE)
-    const t87Time = new Date(baseTime - 3 * 60 * 1000).toISOString();
-    const p87Input: TriageInput = {
-      patientName: 'Ramprasad Sharma',
-      age: 60,
-      gender: 'MALE',
-      chiefComplaint: 'Tightness in chest, severe sweating',
-      vitals: {
-        systolicBp: 155,
-        diastolicBp: 95,
-        pulse: 112,
-        spo2: 93,
-        temperature: 98.4,
-      },
-    };
-    const p87Triage = evaluateTriage(p87Input);
-    const p87: Patient = {
-      id: 'pat-87',
-      tokenNumber: '87',
-      ...p87Input,
-      systemPriority: p87Triage.priority,
-      currentPriority: p87Triage.priority,
-      clinicalRationale: p87Triage.clinicalRationale,
-      matchedRules: p87Triage.matchedRules,
-      isFailSafeEscalation: p87Triage.isFailSafeEscalation,
-      isOverridden: false,
-      status: 'WAITING',
-      createdAt: t87Time,
-      updatedAt: t87Time,
-    };
-    this.patients.set(p87.id, p87);
-    walStorage.appendRecord(
-      'TOKEN_ISSUED',
-      p87.id,
-      p87.tokenNumber,
-      p87 as unknown as Record<string, unknown>,
-      'TO-108 (Triage Officer Dr. Mathur)'
-    );
-    this.recordAuditEntry({
-      tokenNumber: '87',
-      patientId: p87.id,
-      patientName: p87.patientName,
-      eventType: 'TOKEN_ISSUED',
-      newPriority: p87.currentPriority,
-      justification: p87.clinicalRationale,
-      staffBadge: 'TO-108 (Triage Officer Dr. Mathur)',
-      timestamp: t87Time,
-    });
+      walStorage.appendRecord(
+        'TOKEN_ISSUED',
+        patient.id,
+        patient.tokenNumber,
+        patient as unknown as Record<string, unknown>,
+        seed.staffBadge
+      );
 
-    // 5. Token 91: Routine follow up (arrived 1m ago)
-    const t91Time = new Date(baseTime - 1 * 60 * 1000).toISOString();
-    const p91Input: TriageInput = {
-      patientName: 'Manish Soni',
-      age: 31,
-      gender: 'MALE',
-      chiefComplaint: 'Dressing change and stitch removal post-biopsy',
-      vitals: {
-        pulse: 74,
-        spo2: 98,
-      },
-    };
-    const p91Triage = evaluateTriage(p91Input);
-    const p91: Patient = {
-      id: 'pat-91',
-      tokenNumber: '91',
-      ...p91Input,
-      systemPriority: p91Triage.priority,
-      currentPriority: p91Triage.priority,
-      clinicalRationale: p91Triage.clinicalRationale,
-      matchedRules: p91Triage.matchedRules,
-      isFailSafeEscalation: p91Triage.isFailSafeEscalation,
-      isOverridden: false,
-      status: 'WAITING',
-      createdAt: t91Time,
-      updatedAt: t91Time,
-    };
-    this.patients.set(p91.id, p91);
-    walStorage.appendRecord(
-      'TOKEN_ISSUED',
-      p91.id,
-      p91.tokenNumber,
-      p91 as unknown as Record<string, unknown>,
-      'DA-014 (Desk Assistant Ramesh)'
-    );
-    this.recordAuditEntry({
-      tokenNumber: '91',
-      patientId: p91.id,
-      patientName: p91.patientName,
-      eventType: 'TOKEN_ISSUED',
-      newPriority: p91.currentPriority,
-      justification: p91.clinicalRationale,
-      staffBadge: 'DA-014 (Desk Assistant Ramesh)',
-      timestamp: t91Time,
-    });
+      this.recordAuditEntry({
+        tokenNumber: patient.tokenNumber,
+        patientId: patient.id,
+        patientName: patient.patientName,
+        eventType: 'TOKEN_ISSUED',
+        newPriority: patient.currentPriority,
+        justification: patient.clinicalRationale,
+        staffBadge: seed.staffBadge,
+        timestamp: arrivedTime,
+      });
+    }
   }
 
-  /**
-   * Returns patients strictly sorted by triage severity (IMMEDIATE -> SOON -> ROUTINE),
-   * then by arrival time (earliest arrival first).
-   */
   public getPatients(filterStatus?: PatientStatus): Patient[] {
     const list = Array.from(this.patients.values());
     const filtered = filterStatus ? list.filter((p) => p.status === filterStatus) : list;
@@ -428,9 +372,6 @@ class OPDStore {
     return this.patients.get(id);
   }
 
-  /**
-   * Atomically issues a new token, writes to WAL, and updates memory and audit.
-   */
   public createPatient(
     input: TriageInput,
     staffBadge: string,
@@ -438,7 +379,7 @@ class OPDStore {
   ): Patient {
     const token = explicitToken || String(++this.tokenIndexCounter);
     const now = new Date().toISOString();
-    const triage = evaluateTriage(input);
+    const triage = evaluateTriage(input, now);
 
     const patient: Patient = {
       id: `pat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -455,7 +396,6 @@ class OPDStore {
       updatedAt: now,
     };
 
-    // 1. Commit to WAL
     walStorage.appendRecord(
       'TOKEN_ISSUED',
       patient.id,
@@ -464,10 +404,8 @@ class OPDStore {
       staffBadge
     );
 
-    // 2. Commit to memory
     this.patients.set(patient.id, patient);
 
-    // 3. Record audit
     this.recordAuditEntry({
       tokenNumber: patient.tokenNumber,
       patientId: patient.id,
@@ -482,10 +420,6 @@ class OPDStore {
     return patient;
   }
 
-  /**
-   * One-Tap Clinical Nurse Override.
-   * Flushes override transaction to WAL, re-prioritizes patient, and logs audit record.
-   */
   public overridePriority(
     patientId: string,
     newPriority: PriorityLevel,
@@ -505,7 +439,6 @@ class OPDStore {
     const oldPriority = patient.currentPriority;
     const now = new Date().toISOString();
 
-    // 1. Commit to WAL
     walStorage.appendRecord(
       'CLINICAL_OVERRIDE',
       patient.id,
@@ -518,7 +451,6 @@ class OPDStore {
       staffBadge
     );
 
-    // 2. Commit to in-memory state
     patient.currentPriority = newPriority;
     patient.isOverridden = true;
     patient.overrideJustification = trimmedJustification;
@@ -528,7 +460,6 @@ class OPDStore {
 
     this.patients.set(patientId, patient);
 
-    // 3. Record audit
     this.recordAuditEntry({
       tokenNumber: patient.tokenNumber,
       patientId: patient.id,
@@ -544,9 +475,6 @@ class OPDStore {
     return patient;
   }
 
-  /**
-   * Updates patient status (e.g., WAITING -> IN_CONSULTATION -> COMPLETED).
-   */
   public updateStatus(patientId: string, status: PatientStatus, staffBadge: string): Patient {
     const patient = this.patients.get(patientId);
     if (!patient) {
@@ -555,7 +483,6 @@ class OPDStore {
 
     const now = new Date().toISOString();
 
-    // 1. Commit to WAL
     walStorage.appendRecord(
       'STATUS_CHANGED',
       patient.id,
@@ -564,11 +491,9 @@ class OPDStore {
       staffBadge
     );
 
-    // 2. Commit to memory
     patient.status = status;
     patient.updatedAt = now;
 
-    // 3. Record audit
     this.recordAuditEntry({
       tokenNumber: patient.tokenNumber,
       patientId: patient.id,

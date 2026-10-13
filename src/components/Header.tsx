@@ -4,16 +4,11 @@ import React from 'react';
 import Link from 'next/link';
 import { StaffProfile } from '@/types/triage';
 import {
-  Activity,
-  ClipboardList,
-  ShieldCheck,
-  Stethoscope,
-  RefreshCw,
-  UserCheck,
   RotateCcw,
+  User,
 } from 'lucide-react';
 
-export type ActiveTab = 'REGISTER' | 'DASHBOARD' | 'AUDIT';
+export type ActiveTab = 'DASHBOARD' | 'REGISTER' | 'AUDIT';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -35,116 +30,49 @@ export const Header: React.FC<HeaderProps> = ({
   staffProfiles,
   activeStaff,
   onStaffChange,
-  isPolling,
-  onManualRefresh,
   onResetSeedData,
   waitingCount,
   immediateCount,
   useLinks = false,
 }) => {
   return (
-    <header className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-xs">
-      {/* Top hospital institution bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 text-xs">
-        <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-bold text-[10px]">
-            SN
-          </div>
-          <span className="font-semibold text-slate-800">
-            Dr. S.N. Medical College & Associated Hospitals, Jodhpur
-          </span>
-          <span className="hidden sm:inline text-slate-300">•</span>
-          <span className="hidden sm:inline text-slate-600">
-            Aayu 2026 AI Medical Hackathon — Track 01 (OPD Flow)
-          </span>
-        </div>
-
-        {/* Staff badge switcher & Reset seeds */}
+    <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200">
-            <UserCheck className="w-3.5 h-3.5 text-blue-600" />
-            <span className="text-slate-500 hidden md:inline text-[11px]">Active Staff:</span>
-            <select
-              aria-label="Active Staff Badge"
-              value={activeStaff.id}
-              onChange={(e) => {
-                const found = staffProfiles.find((s) => s.id === e.target.value);
-                if (found) onStaffChange(found);
-              }}
-              className="bg-transparent text-slate-800 font-medium text-xs focus:outline-none cursor-pointer"
-            >
-              {staffProfiles.map((s) => (
-                <option key={s.id} value={s.id} className="bg-white text-slate-800">
-                  [{s.badgeNumber}] {s.name} - {s.role}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={onResetSeedData}
-            title="Reset queue and test cases to default baseline"
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-xs transition border border-slate-200 font-medium"
-          >
-            <RotateCcw className="w-3 h-3 text-amber-600" />
-            <span className="hidden sm:inline">Reset Seeds</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main navigation and workstation switcher */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
-        {/* Brand identity */}
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
-            <Activity className="w-5 h-5 text-white" />
+          <div className="h-9 w-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-xs">
+            +
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                OPD FLOW
-                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                  Deterministic Triage
-                </span>
-              </h1>
+              <span className="font-bold text-slate-900 tracking-tight text-base">Triage</span>
+              <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                Dr. S.N. Hospital
+              </span>
             </div>
-            <p className="text-[11px] text-slate-500">
-              Explainable Clinical Prioritization & Queue Flow
+            <p className="text-[11px] text-slate-500 hidden sm:block">
+              Clinical Prioritization & Queue System
             </p>
           </div>
         </div>
 
-        {/* Workstation switch tabs */}
-        <nav className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+        {/* Minimal Navigation Tabs */}
+        <nav className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold">
           {useLinks ? (
             <>
               <Link
-                href="/register"
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
-                  activeTab === 'REGISTER'
-                    ? 'bg-white text-blue-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <ClipboardList className="w-3.5 h-3.5" />
-                <span>Registration Desk</span>
-              </Link>
-              <Link
                 href="/dashboard"
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition relative ${
+                className={`px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
                   activeTab === 'DASHBOARD'
-                    ? 'bg-white text-rose-700 shadow-xs'
+                    ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Stethoscope className="w-3.5 h-3.5" />
-                <span>Nursing Station</span>
+                <span>Live Queue</span>
                 {waitingCount > 0 && (
                   <span
-                    className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      immediateCount > 0
-                        ? 'bg-rose-600 text-white animate-pulse'
-                        : 'bg-slate-200 text-slate-700'
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      immediateCount > 0 ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-200 text-slate-700'
                     }`}
                   >
                     {waitingCount}
@@ -152,47 +80,42 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </Link>
               <Link
-                href="/audit"
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
-                  activeTab === 'AUDIT'
-                    ? 'bg-white text-emerald-700 shadow-xs'
+                href="/register"
+                className={`px-3.5 py-1.5 rounded-lg transition ${
+                  activeTab === 'REGISTER'
+                    ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Compliance & Audit</span>
+                Register Patient
+              </Link>
+              <Link
+                href="/audit"
+                className={`px-3.5 py-1.5 rounded-lg transition ${
+                  activeTab === 'AUDIT'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Audit Trail
               </Link>
             </>
           ) : (
             <>
               <button
-                onClick={() => onTabChange && onTabChange('REGISTER')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
-                  activeTab === 'REGISTER'
-                    ? 'bg-white text-blue-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <ClipboardList className="w-3.5 h-3.5" />
-                <span>Registration Desk</span>
-              </button>
-
-              <button
+                type="button"
                 onClick={() => onTabChange && onTabChange('DASHBOARD')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition relative ${
+                className={`px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
                   activeTab === 'DASHBOARD'
-                    ? 'bg-white text-rose-700 shadow-xs'
+                    ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Stethoscope className="w-3.5 h-3.5" />
-                <span>Nursing Station</span>
+                <span>Live Queue</span>
                 {waitingCount > 0 && (
                   <span
-                    className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      immediateCount > 0
-                        ? 'bg-rose-600 text-white animate-pulse'
-                        : 'bg-slate-200 text-slate-700'
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      immediateCount > 0 ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-200 text-slate-700'
                     }`}
                   >
                     {waitingCount}
@@ -201,37 +124,62 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <button
-                onClick={() => onTabChange && onTabChange('AUDIT')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
-                  activeTab === 'AUDIT'
-                    ? 'bg-white text-emerald-700 shadow-xs'
+                type="button"
+                onClick={() => onTabChange && onTabChange('REGISTER')}
+                className={`px-3.5 py-1.5 rounded-lg transition ${
+                  activeTab === 'REGISTER'
+                    ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Compliance & Audit</span>
+                Register Patient
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onTabChange && onTabChange('AUDIT')}
+                className={`px-3.5 py-1.5 rounded-lg transition ${
+                  activeTab === 'AUDIT'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Audit Trail
               </button>
             </>
           )}
         </nav>
 
-        {/* Live sync heartbeat */}
-        <div className="flex items-center gap-2 text-xs">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200 text-slate-600">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isPolling ? 'bg-emerald-500 animate-ping' : 'bg-slate-400'
-              }`}
-            />
-            <span className="font-mono text-[11px] text-slate-700 font-medium">Live (2s Poll)</span>
+        {/* Right Tools: Staff Selector & Reset */}
+        <div className="flex items-center gap-2">
+          {/* Staff dropdown pill */}
+          <div className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 transition">
+            <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            <select
+              aria-label="Staff Profile"
+              value={activeStaff.id}
+              onChange={(e) => {
+                const found = staffProfiles.find((s) => s.id === e.target.value);
+                if (found) onStaffChange(found);
+              }}
+              className="bg-transparent text-slate-800 text-xs font-medium focus:outline-none cursor-pointer max-w-[140px] truncate"
+            >
+              {staffProfiles.map((s) => (
+                <option key={s.id} value={s.id} className="bg-white text-slate-800">
+                  {s.name} ({s.badgeNumber})
+                </option>
+              ))}
+            </select>
           </div>
 
+          {/* Quick seed reset button */}
           <button
-            onClick={onManualRefresh}
-            title="Refresh Queue Now"
-            className="p-1.5 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition"
+            type="button"
+            onClick={onResetSeedData}
+            title="Reset queue to demo test cases"
+            className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 rounded-lg transition"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

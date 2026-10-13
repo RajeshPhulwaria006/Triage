@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'OPD Flow | Dr. S.N. Medical College Jodhpur | Clinical Triage System',
+  title: 'Triage | Clinical Patient Prioritization System',
   description:
-    'Deterministic, explainable clinical triage and patient queue prioritization for outpatient departments. Aayu 2026 AI Medical Hackathon Track 01.',
+    'Deterministic, explainable clinical triage and patient queue prioritization for outpatient departments. Dr. S.N. Medical College Jodhpur.',
 };
 
 export default function RootLayout({
@@ -13,8 +13,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full bg-slate-950 text-slate-100">
-      <body className="min-h-full flex flex-col antialiased selection:bg-rose-500 selection:text-white">
+    <html lang="en" className="h-full bg-slate-50 text-slate-900" suppressHydrationWarning>
+      <body
+        className="min-h-full flex flex-col antialiased selection:bg-blue-600 selection:text-white bg-slate-50 text-slate-900"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

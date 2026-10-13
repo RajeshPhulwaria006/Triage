@@ -89,7 +89,7 @@ export const AuditTrail: React.FC<AuditTrailProps> = ({ auditLogs, onRefresh }) 
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
       {/* Header and Compliance Summary */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">

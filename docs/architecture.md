@@ -189,4 +189,18 @@ Automated rules can never replace experienced bedside clinical intuition. If a p
 ### Test Case 3: One-Tap Nurse Override
 - Token 23 escalated from ROUTINE to IMMEDIATE with justification: *"Patient observed diaphoretic and pale in corridor"*.
 - Token 23 instantly re-sorts to **Rank #1** in the live queue.
-- Audit entry logged under sequence `#106` with badge `SN-402`.
+- Audit entry logged under sequence `#115` with badge `SN-402`.
+
+---
+
+## 8. Containerization & Deployment (Docker & Compose)
+
+OPD Flow is containerized with a lightweight multi-stage Docker build producing a standalone Next.js image.
+
+### Running with Docker Compose
+```bash
+docker compose up --build
+```
+- **Port**: Exposed on port `3000` (`http://localhost:3000`).
+- **Data Persistence**: Host volume `./data:/app/data` ensures that the append-only Write-Ahead Log (`data/opd_wal.jsonl`) survives container restarts and upgrades.
+- **Health Check**: Automated periodic probe pinging `/api/queue` to verify server responsiveness.

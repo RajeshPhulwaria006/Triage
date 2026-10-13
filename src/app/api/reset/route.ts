@@ -11,7 +11,7 @@ export async function POST() {
     opdStore.seedInitialData();
     return NextResponse.json({
       success: true,
-      message: 'OPD Flow store reset to initial seed state (Tokens 23, 54, 62, 87, 91).',
+      message: 'Triage store reset to initial seed state.',
       patients: opdStore.getPatients(),
     });
   } catch (error) {

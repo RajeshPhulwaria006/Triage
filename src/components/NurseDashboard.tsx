@@ -7,13 +7,10 @@ import {
   AlertTriangle,
   Clock,
   CheckCircle2,
-  Stethoscope,
-  ShieldAlert,
-  ArrowUpDown,
-  Filter,
-  Check,
+  SlidersHorizontal,
+  ChevronRight,
   PhoneCall,
-  Sparkles,
+  Check,
 } from 'lucide-react';
 
 interface NurseDashboardProps {
@@ -41,22 +38,12 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({
     null
   );
   const [priorityFilter, setPriorityFilter] = useState<'ALL' | PriorityLevel>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ACTIVE' | 'IN_CONSULTATION' | 'COMPLETED' | 'ALL'>('ACTIVE');
 
   const displayedPatients = patients.filter((p) => {
     if (priorityFilter !== 'ALL' && p.currentPriority !== priorityFilter) {
       return false;
     }
-    if (statusFilter === 'ACTIVE' && p.status !== 'WAITING') {
-      return false;
-    }
-    if (statusFilter === 'IN_CONSULTATION' && p.status !== 'IN_CONSULTATION') {
-      return false;
-    }
-    if (statusFilter === 'COMPLETED' && p.status !== 'COMPLETED') {
-      return false;
-    }
-    return true;
+    return p.status === 'WAITING' || p.status === 'IN_CONSULTATION';
   });
 
   const formatWaitTime = (createdAt: string) => {
@@ -65,187 +52,92 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({
       Math.floor((Date.now() - new Date(createdAt).getTime()) / (60 * 1000))
     );
     if (elapsedMinutes < 1) return 'Just now';
-    if (elapsedMinutes === 1) return '1 min ago';
-    return `${elapsedMinutes} mins ago`;
+    if (elapsedMinutes === 1) return '1m ago';
+    return `${elapsedMinutes}m ago`;
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Clinical Acuity & Queue Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {/* Total Waiting */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs mb-1 font-medium">
-            <span>Total Waiting</span>
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{summary.totalWaiting}</div>
-          <div className="text-[11px] text-slate-500 mt-1 font-mono">
-            Avg wait: {summary.averageWaitMinutes}m
-          </div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+      {/* Top Simple Summary Bar */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-base font-bold text-slate-900">Doctor & Nurse Queue</h2>
+          <p className="text-xs text-slate-500">
+            Sorted strictly by triage priority. Critical patients automatically jump to the top.
+          </p>
         </div>
 
-        {/* Immediate (Red) */}
-        <div
-          onClick={() => setPriorityFilter(priorityFilter === 'IMMEDIATE' ? 'ALL' : 'IMMEDIATE')}
-          className={`border rounded-xl p-3.5 shadow-xs cursor-pointer transition ${
-            priorityFilter === 'IMMEDIATE'
-              ? 'bg-rose-50 border-rose-400 ring-2 ring-rose-400/40'
-              : 'bg-white border-slate-200 hover:border-rose-300'
-          }`}
-        >
-          <div className="flex items-center justify-between text-rose-700 text-xs mb-1 font-bold">
-            <span>IMMEDIATE</span>
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-600 animate-urgent-pulse" />
-          </div>
-          <div className="text-2xl font-bold text-rose-700 flex items-center gap-2">
-            <span>{summary.immediateCount}</span>
-            {summary.immediateCount > 0 && (
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping inline-block" />
-            )}
-          </div>
-          <div className="text-[11px] text-rose-600 mt-1 font-medium">Tier 1 • Urgent Doctor</div>
-        </div>
-
-        {/* Soon (Yellow) */}
-        <div
-          onClick={() => setPriorityFilter(priorityFilter === 'SOON' ? 'ALL' : 'SOON')}
-          className={`border rounded-xl p-3.5 shadow-xs cursor-pointer transition ${
-            priorityFilter === 'SOON'
-              ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-400/40'
-              : 'bg-white border-slate-200 hover:border-amber-300'
-          }`}
-        >
-          <div className="flex items-center justify-between text-amber-800 text-xs mb-1 font-bold">
-            <span>SOON</span>
-            <Clock className="w-3.5 h-3.5 text-amber-600" />
-          </div>
-          <div className="text-2xl font-bold text-amber-800">{summary.soonCount}</div>
-          <div className="text-[11px] text-amber-700 mt-1 font-medium">Tier 2 • Review &lt;30m</div>
-        </div>
-
-        {/* Routine (Green) */}
-        <div
-          onClick={() => setPriorityFilter(priorityFilter === 'ROUTINE' ? 'ALL' : 'ROUTINE')}
-          className={`border rounded-xl p-3.5 shadow-xs cursor-pointer transition ${
-            priorityFilter === 'ROUTINE'
-              ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/40'
-              : 'bg-white border-slate-200 hover:border-emerald-300'
-          }`}
-        >
-          <div className="flex items-center justify-between text-emerald-800 text-xs mb-1 font-bold">
-            <span>ROUTINE</span>
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-          </div>
-          <div className="text-2xl font-bold text-emerald-800">{summary.routineCount}</div>
-          <div className="text-[11px] text-emerald-700 mt-1 font-medium">Tier 3 • Standard Flow</div>
-        </div>
-
-        {/* In Consultation */}
-        <div
-          onClick={() => setStatusFilter(statusFilter === 'IN_CONSULTATION' ? 'ACTIVE' : 'IN_CONSULTATION')}
-          className={`border rounded-xl p-3.5 shadow-xs cursor-pointer transition ${
-            statusFilter === 'IN_CONSULTATION'
-              ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-400/40'
-              : 'bg-white border-slate-200 hover:border-blue-300'
-          }`}
-        >
-          <div className="flex items-center justify-between text-blue-700 text-xs mb-1 font-bold">
-            <span>In Room</span>
-            <Stethoscope className="w-3.5 h-3.5 text-blue-600" />
-          </div>
-          <div className="text-2xl font-bold text-blue-800">{summary.inConsultationCount}</div>
-          <div className="text-[11px] text-blue-600 mt-1 font-medium">Active with Doctor</div>
-        </div>
-
-        {/* Overrides Logged */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-purple-700 text-xs mb-1 font-bold">
-            <span>Overrides</span>
-            <ShieldAlert className="w-3.5 h-3.5 text-purple-600" />
-          </div>
-          <div className="text-2xl font-bold text-purple-800">{summary.overriddenCount}</div>
-          <div className="text-[11px] text-purple-600 mt-1 font-medium">Nurse Discretion Log</div>
-        </div>
-      </div>
-
-      {/* Control Bar: View toggles & Sort status */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+        {/* Acuity Filter Pills */}
         <div className="flex items-center gap-2 text-xs">
-          <Filter className="w-3.5 h-3.5 text-slate-500" />
-          <span className="text-slate-600 font-semibold">Filter Acuity:</span>
-          <div className="flex items-center gap-1">
-            {(['ALL', 'IMMEDIATE', 'SOON', 'ROUTINE'] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setPriorityFilter(filter)}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition border ${
-                  priorityFilter === filter
-                    ? filter === 'IMMEDIATE'
-                      ? 'bg-rose-600 text-white border-rose-600'
-                      : filter === 'SOON'
-                      ? 'bg-amber-600 text-white border-amber-600'
-                      : filter === 'ROUTINE'
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-slate-800 text-white border-slate-800'
-                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-        </div>
+          <button
+            type="button"
+            onClick={() => setPriorityFilter('ALL')}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition ${
+              priorityFilter === 'ALL'
+                ? 'bg-slate-900 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            All ({summary.totalWaiting})
+          </button>
 
-        <div className="flex items-center gap-3 text-xs">
-          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 text-slate-600 font-medium">
-            <ArrowUpDown className="w-3.5 h-3.5 text-blue-600" />
-            <span>Sorted by: </span>
-            <strong className="text-slate-900 font-mono">Triage Severity &rarr; Arrival Time</strong>
-          </div>
+          <button
+            type="button"
+            onClick={() => setPriorityFilter(priorityFilter === 'IMMEDIATE' ? 'ALL' : 'IMMEDIATE')}
+            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+              priorityFilter === 'IMMEDIATE'
+                ? 'bg-red-600 text-white'
+                : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200/80'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-red-600" />
+            Immediate ({summary.immediateCount})
+          </button>
 
-          <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-md border border-slate-200">
-            <button
-              onClick={() => setStatusFilter('ACTIVE')}
-              className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
-                statusFilter === 'ACTIVE'
-                  ? 'bg-white text-slate-900 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Waiting
-            </button>
-            <button
-              onClick={() => setStatusFilter('ALL')}
-              className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
-                statusFilter === 'ALL'
-                  ? 'bg-white text-slate-900 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              All Statuses
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setPriorityFilter(priorityFilter === 'SOON' ? 'ALL' : 'SOON')}
+            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+              priorityFilter === 'SOON'
+                ? 'bg-amber-600 text-white'
+                : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/80'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            Soon ({summary.soonCount})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPriorityFilter(priorityFilter === 'ROUTINE' ? 'ALL' : 'ROUTINE')}
+            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+              priorityFilter === 'ROUTINE'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-600" />
+            Routine ({summary.routineCount})
+          </button>
         </div>
       </div>
 
       {/* Patient Queue Cards List */}
       <div className="space-y-3">
         {displayedPatients.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center space-y-3 shadow-xs">
-            <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
-              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+          <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center space-y-3 shadow-2xs">
+            <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
-            <h3 className="text-sm font-bold text-slate-900">No Patients in Selected View</h3>
+            <h3 className="text-sm font-bold text-slate-800">Queue is Clear</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              No patients match your current priority or status filter. Register a new patient or
-              reset default test seeds.
+              No patients are waiting under this filter.
             </p>
             <button
               onClick={onNavigateToRegister}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs transition"
             >
-              Register New Patient &rarr;
+              + Register New Patient
             </button>
           </div>
         ) : (
@@ -254,233 +146,160 @@ export const NurseDashboard: React.FC<NurseDashboardProps> = ({
             const isSoon = patient.currentPriority === 'SOON';
             const isRoutine = patient.currentPriority === 'ROUTINE';
 
+            const hasAnyVitals =
+              patient.vitals.systolicBp ||
+              patient.vitals.pulse ||
+              patient.vitals.spo2 ||
+              patient.vitals.temperature;
+
             return (
               <div
                 key={patient.id}
-                className={`bg-white rounded-xl border transition-all duration-200 shadow-xs ${
+                className={`bg-white rounded-2xl border transition-all p-4 sm:p-5 shadow-2xs hover:shadow-xs ${
                   isImmediate
-                    ? 'border-l-4 border-l-rose-600 border-slate-200 ring-1 ring-rose-200'
+                    ? 'border-l-6 border-l-red-600 border-slate-200 bg-red-50/20'
                     : isSoon
-                    ? 'border-l-4 border-l-amber-500 border-slate-200'
-                    : 'border-l-4 border-l-emerald-500 border-slate-200'
+                    ? 'border-l-6 border-l-amber-500 border-slate-200'
+                    : 'border-l-6 border-l-emerald-500 border-slate-200'
                 }`}
               >
-                <div className="p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                  {/* Left: Token, Priority Badge & Demographics */}
-                  <div className="flex items-start gap-4 min-w-0">
-                    {/* Token Number Box */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  {/* Left: Token & Patient Info */}
+                  <div className="flex items-start gap-4">
+                    {/* Big Clean Token Box */}
                     <div
-                      className={`h-16 w-16 sm:h-20 sm:w-20 rounded-xl flex flex-col items-center justify-center shrink-0 border font-mono ${
+                      className={`h-16 w-16 rounded-xl flex flex-col items-center justify-center shrink-0 font-mono border ${
                         isImmediate
-                          ? 'bg-rose-50 border-rose-300 text-rose-700 animate-urgent-pulse'
+                          ? 'bg-red-50 border-red-200 text-red-700'
                           : isSoon
-                          ? 'bg-amber-50 border-amber-300 text-amber-800'
-                          : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                          ? 'bg-amber-50 border-amber-200 text-amber-800'
+                          : 'bg-emerald-50 border-emerald-200 text-emerald-800'
                       }`}
                     >
-                      <span className="text-[10px] uppercase font-bold text-slate-500">Token</span>
-                      <span className="text-2xl sm:text-3xl font-black">#{patient.tokenNumber}</span>
-                      <span className="text-[10px] text-slate-500 font-medium">Pos #{index + 1}</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        Token
+                      </span>
+                      <span className="text-2xl font-black">#{patient.tokenNumber}</span>
+                      <span className="text-[9px] text-slate-500">#{index + 1} in line</span>
                     </div>
 
-                    {/* Patient Core Details */}
-                    <div className="space-y-1.5 min-w-0">
+                    {/* Patient Core Info */}
+                    <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                        <span className="text-base font-bold text-slate-900">
                           {patient.patientName}
-                        </h3>
-                        <span className="text-xs text-slate-500 font-mono">
-                          ({patient.age}y • {patient.gender})
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          ({patient.age}y, {patient.gender.toLowerCase()})
                         </span>
 
-                        {/* Priority Badge */}
+                        {/* Priority Pill */}
                         <span
-                          className={`text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 border ${
+                          className={`text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border ${
                             isImmediate
-                              ? 'bg-rose-50 text-rose-700 border-rose-300 animate-pulse'
+                              ? 'bg-red-100 text-red-800 border-red-300'
                               : isSoon
-                              ? 'bg-amber-50 text-amber-800 border-amber-300'
-                              : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              ? 'bg-amber-100 text-amber-900 border-amber-300'
+                              : 'bg-emerald-100 text-emerald-900 border-emerald-300'
                           }`}
                         >
-                          {isImmediate && <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />}
-                          {isSoon && <Clock className="w-3.5 h-3.5 text-amber-600" />}
-                          {isRoutine && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                          {isImmediate && <AlertTriangle className="w-3 h-3 text-red-600" />}
+                          {isSoon && <Clock className="w-3 h-3 text-amber-600" />}
+                          {isRoutine && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
                           <span>{patient.currentPriority}</span>
                         </span>
 
-                        {/* Status Badge */}
-                        <span
-                          className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${
-                            patient.status === 'WAITING'
-                              ? 'bg-slate-100 text-slate-700 border-slate-200'
-                              : patient.status === 'IN_CONSULTATION'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          }`}
-                        >
-                          {patient.status.replace('_', ' ')}
-                        </span>
+                        {/* In Room Indicator */}
+                        {patient.status === 'IN_CONSULTATION' && (
+                          <span className="text-[11px] font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                            In Room With Doctor
+                          </span>
+                        )}
 
                         {patient.isOverridden && (
-                          <span className="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-200 font-bold flex items-center gap-1">
-                            <ShieldAlert className="w-3 h-3 text-purple-600" />
+                          <span className="text-[10px] font-semibold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
                             Nurse Overridden
+                          </span>
+                        )}
+
+                        <span className="text-xs text-slate-400 font-mono ml-auto md:ml-0">
+                          {formatWaitTime(patient.createdAt)}
+                        </span>
+                      </div>
+
+                      {/* Complaint */}
+                      <p className="text-xs text-slate-700">
+                        <strong className="text-slate-900">Complaint:</strong> &ldquo;{patient.chiefComplaint}&rdquo;
+                      </p>
+
+                      {/* Clinical Reason */}
+                      <p className="text-xs text-slate-600 font-medium">
+                        <span className="text-slate-500">Clinical Reason: </span>
+                        {patient.clinicalRationale}
+                      </p>
+
+                      {/* Vitals Summary Line */}
+                      <div className="text-xs text-slate-600 pt-0.5 flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-slate-500">Vitals:</span>
+                        {hasAnyVitals ? (
+                          <span className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
+                            {[
+                              patient.vitals.systolicBp
+                                ? `BP ${patient.vitals.systolicBp}/${patient.vitals.diastolicBp || '-'}`
+                                : null,
+                              patient.vitals.pulse ? `${patient.vitals.pulse} bpm` : null,
+                              patient.vitals.spo2 ? `SpO2 ${patient.vitals.spo2}%` : null,
+                              patient.vitals.temperature ? `${patient.vitals.temperature}°F` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(' • ')}
+                          </span>
+                        ) : (
+                          <span className="font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                            Not Recorded (Safety Escalation Applied)
                           </span>
                         )}
                       </div>
 
-                      {/* Chief Complaint */}
-                      <div className="text-xs text-slate-700 flex items-center gap-2">
-                        <span className="text-slate-500 font-medium">Complaint:</span>
-                        <span className="font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                          {patient.chiefComplaint}
-                        </span>
-                        <span className="text-[11px] text-slate-500 ml-1">
-                          • Arrived: {formatWaitTime(patient.createdAt)}
-                        </span>
-                      </div>
-
-                      {/* Clinical Triage Rationale String */}
-                      <div className="text-xs text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-0.5">
-                          <Sparkles className="w-3 h-3 text-blue-600" />
-                          <span>System Clinical Rationale:</span>
-                        </div>
-                        <p className="text-slate-800 font-medium">{patient.clinicalRationale}</p>
-                      </div>
-
-                      {/* Overridden Callout if applicable */}
+                      {/* Nurse Override Note (if any) */}
                       {patient.isOverridden && (
-                        <div className="text-xs bg-purple-50 border border-purple-200 p-2 rounded-lg text-purple-900 space-y-0.5">
-                          <div className="flex items-center justify-between text-[11px] font-bold text-purple-800">
-                            <span>Clinical Override Note:</span>
-                            <span className="font-mono text-[10px] text-purple-700">
-                              By {patient.overriddenBy}
-                            </span>
-                          </div>
-                          <p className="italic">
-                            &quot;{patient.overrideJustification}&quot; (Altered from{' '}
-                            {patient.systemPriority} to {patient.currentPriority})
-                          </p>
-                        </div>
+                        <p className="text-xs text-purple-800 bg-purple-50 p-2 rounded-lg border border-purple-200 mt-1">
+                          <strong>Override Note ({patient.overriddenBy}):</strong> &ldquo;{patient.overrideJustification}&rdquo;
+                        </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Right: Vitals Grid & Quick Action Buttons */}
-                  <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end gap-3 shrink-0">
-                    {/* Vitals Grid */}
-                    <div className="grid grid-cols-4 gap-1.5 text-center bg-slate-50 p-2 rounded-lg border border-slate-200 w-full sm:w-auto">
-                      {/* BP */}
-                      <div className="p-1 rounded bg-white border border-slate-200 min-w-16">
-                        <span className="text-[9px] text-slate-500 block uppercase font-medium">BP</span>
-                        {patient.vitals.systolicBp ? (
-                          <span
-                            className={`text-xs font-bold font-mono ${
-                              patient.vitals.systolicBp > 180
-                                ? 'text-rose-600'
-                                : patient.vitals.systolicBp > 140
-                                ? 'text-amber-700'
-                                : 'text-slate-800'
-                            }`}
-                          >
-                            {patient.vitals.systolicBp}/{patient.vitals.diastolicBp || '-'}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-mono">Not Rec.</span>
-                        )}
-                      </div>
+                  {/* Right Action Buttons */}
+                  <div className="flex md:flex-col items-center gap-2 shrink-0 pt-2 md:pt-0">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPatientForOverride(patient)}
+                      className="flex-1 md:flex-initial w-full px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition flex items-center justify-center gap-1.5"
+                    >
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-slate-600" />
+                      <span>Override</span>
+                    </button>
 
-                      {/* Pulse */}
-                      <div className="p-1 rounded bg-white border border-slate-200 min-w-14">
-                        <span className="text-[9px] text-slate-500 block uppercase font-medium">Pulse</span>
-                        {patient.vitals.pulse ? (
-                          <span
-                            className={`text-xs font-bold font-mono ${
-                              patient.vitals.pulse > 130 || patient.vitals.pulse < 40
-                                ? 'text-rose-600'
-                                : patient.vitals.pulse > 105
-                                ? 'text-amber-700'
-                                : 'text-slate-800'
-                            }`}
-                          >
-                            {patient.vitals.pulse} bpm
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-mono">Not Rec.</span>
-                        )}
-                      </div>
-
-                      {/* SpO2 */}
-                      <div className="p-1 rounded bg-white border border-slate-200 min-w-14">
-                        <span className="text-[9px] text-slate-500 block uppercase font-medium">SpO2</span>
-                        {patient.vitals.spo2 ? (
-                          <span
-                            className={`text-xs font-bold font-mono ${
-                              patient.vitals.spo2 < 90
-                                ? 'text-rose-600 font-black'
-                                : patient.vitals.spo2 <= 94
-                                ? 'text-amber-700'
-                                : 'text-emerald-700'
-                            }`}
-                          >
-                            {patient.vitals.spo2}%
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-mono">Not Rec.</span>
-                        )}
-                      </div>
-
-                      {/* Temp */}
-                      <div className="p-1 rounded bg-white border border-slate-200 min-w-14">
-                        <span className="text-[9px] text-slate-500 block uppercase font-medium">Temp</span>
-                        {patient.vitals.temperature ? (
-                          <span
-                            className={`text-xs font-bold font-mono ${
-                              patient.vitals.temperature >= 101.5
-                                ? 'text-amber-700'
-                                : 'text-slate-800'
-                            }`}
-                          >
-                            {patient.vitals.temperature}°F
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-mono">Not Rec.</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                    {patient.status === 'WAITING' ? (
                       <button
-                        onClick={() => setSelectedPatientForOverride(patient)}
-                        className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold transition shadow-2xs"
+                        type="button"
+                        onClick={() => onUpdateStatus(patient.id, 'IN_CONSULTATION')}
+                        className="flex-1 md:flex-initial w-full px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition shadow-2xs flex items-center justify-center gap-1.5"
                       >
-                        <ShieldAlert className="w-3.5 h-3.5 text-purple-600" />
-                        <span>One-Tap Override</span>
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        <span>Call In</span>
                       </button>
-
-                      {patient.status === 'WAITING' && (
-                        <button
-                          onClick={() => onUpdateStatus(patient.id, 'IN_CONSULTATION')}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs"
-                        >
-                          <PhoneCall className="w-3.5 h-3.5" />
-                          <span>Call In</span>
-                        </button>
-                      )}
-
-                      {patient.status === 'IN_CONSULTATION' && (
-                        <button
-                          onClick={() => onUpdateStatus(patient.id, 'COMPLETED')}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Complete</span>
-                        </button>
-                      )}
-                    </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onUpdateStatus(patient.id, 'COMPLETED')}
+                        className="flex-1 md:flex-initial w-full px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-2xs flex items-center justify-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Done</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

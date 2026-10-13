@@ -66,10 +66,23 @@ export async function POST(request: Request) {
 
     const effectiveBadge = (staffBadge && typeof staffBadge === 'string' && staffBadge.trim()) || 'Desk Assistant (General)';
 
+    if (tokenNumber !== undefined && tokenNumber !== null && String(tokenNumber).trim() !== '') {
+      const candidateToken = String(tokenNumber).trim();
+      if (opdStore.isTokenTaken(candidateToken)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Token #${candidateToken} is already registered. Please choose an unused token number or leave blank to auto-generate.`,
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const patient = opdStore.createPatient(
       triageInput,
       effectiveBadge,
-      tokenNumber ? String(tokenNumber) : undefined
+      tokenNumber ? String(tokenNumber).trim() : undefined
     );
 
     return NextResponse.json({
@@ -79,6 +92,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to register patient';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    const isConflict = message.includes('already registered');
+    return NextResponse.json({ success: false, error: message }, { status: isConflict ? 409 : 500 });
   }
 }

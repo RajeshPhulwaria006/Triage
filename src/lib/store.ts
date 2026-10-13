@@ -422,6 +422,23 @@ class OPDStore {
   }
 
   /**
+   * Checks whether a token number is already registered for an OPD session.
+   * If targetDate is specified (YYYY-MM-DD), checks within that date.
+   * Defaults to today's date session.
+   */
+  public isTokenTaken(tokenNumber: string, targetDate?: string): boolean {
+    const checkDate = targetDate || new Date().toISOString().split('T')[0];
+    const normalized = tokenNumber.trim();
+    for (const p of this.patients.values()) {
+      const patientDate = p.createdAt.split('T')[0];
+      if (patientDate === checkDate && p.tokenNumber === normalized) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Generates sequential token numbers scoped to the current day.
    * If existing tokens are numeric, it assigns the next sequential integer (1, 2, 3... or 136, 137...).
    * When midnight passes (new calendar date), tokens restart from 1 for the new day's OPD session.
@@ -453,9 +470,19 @@ class OPDStore {
     explicitToken?: string
   ): Patient {
     const now = new Date().toISOString();
-    const token = (explicitToken && !this.patients.has(`pat-${explicitToken}`)) 
-      ? explicitToken 
-      : this.getNextAvailableToken(now);
+    const todayPrefix = now.split('T')[0];
+
+    let token: string;
+    if (explicitToken && explicitToken.trim()) {
+      const candidate = explicitToken.trim();
+      if (this.isTokenTaken(candidate, todayPrefix)) {
+        throw new Error(`Token #${candidate} is already registered for today's OPD session. Please choose an unused token number or leave blank to auto-generate.`);
+      }
+      token = candidate;
+    } else {
+      token = this.getNextAvailableToken(now);
+    }
+
     const triage = evaluateTriage(input, now);
 
     const patient: Patient = {

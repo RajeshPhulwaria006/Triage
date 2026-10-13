@@ -283,9 +283,9 @@ export const RegistrationDesk: React.FC<RegistrationDeskProps> = ({
       {/* Main Registration Card */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs space-y-5">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Row 1: Name, Age, Gender */}
+          {/* Row 1: Name, Age, Gender, Token # */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div className="sm:col-span-6">
+            <div className="sm:col-span-5">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Patient Name *
               </label>
@@ -299,7 +299,7 @@ export const RegistrationDesk: React.FC<RegistrationDeskProps> = ({
               />
             </div>
 
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">Age *</label>
               <input
                 type="number"
@@ -313,7 +313,7 @@ export const RegistrationDesk: React.FC<RegistrationDeskProps> = ({
               />
             </div>
 
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">Gender *</label>
               <select
                 aria-label="Patient Gender"
@@ -325,6 +325,20 @@ export const RegistrationDesk: React.FC<RegistrationDeskProps> = ({
                 <option value="FEMALE">Female</option>
                 <option value="OTHER">Other</option>
               </select>
+            </div>
+
+            <div className="sm:col-span-3">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">Token # (Optional)</label>
+                <span className="text-[10px] text-slate-400">Auto if blank</span>
+              </div>
+              <input
+                type="text"
+                value={tokenOverride}
+                onChange={(e) => setTokenOverride(e.target.value)}
+                placeholder="e.g. 105"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
 

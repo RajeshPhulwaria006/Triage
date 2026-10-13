@@ -155,6 +155,49 @@ async function runAllTests() {
   const initResult = await initializeDatabase();
   assert(typeof initResult === 'boolean', 'Database adapter handles environment gracefully');
 
+  // TEST SUITE 7: Manual Token Number & Duplicate Rejection & Audit Log Immutability
+  console.log('\n--- Suite 7: Manual Token & Duplicate Prevention ---');
+  const customPatient = opdStore.createPatient(
+    {
+      patientName: 'Anil Sharma',
+      age: 42,
+      gender: 'MALE',
+      chiefComplaint: 'Mild wrist sprain after fall',
+      vitals: { spo2: 99, heartRate: 72 },
+    },
+    'STAFF-TEST',
+    '777'
+  );
+  assert(customPatient.tokenNumber === '777', 'Custom token 777 successfully issued');
+  assert(opdStore.isTokenTaken('777') === true, 'isTokenTaken returns true for existing token 777');
+
+  // Duplicate rejection
+  let duplicateRejected = false;
+  try {
+    opdStore.createPatient(
+      {
+        patientName: 'Duplicate Token Attempt',
+        age: 30,
+        gender: 'FEMALE',
+        chiefComplaint: 'Mild headache',
+        vitals: {},
+      },
+      'STAFF-TEST',
+      '777'
+    );
+  } catch (err) {
+    duplicateRejected = err instanceof Error && err.message.includes('already registered');
+  }
+  assert(duplicateRejected, 'Duplicate token 777 strictly rejected with clear clinical error');
+
+  // Audit log immutability & timestamp presence
+  const customAudit = opdStore.getAuditLogs().find((a) => a.tokenNumber === '777');
+  assert(Boolean(customAudit), 'Audit log contains immutable entry for token 777');
+  assert(
+    Boolean(customAudit?.timestamp && !isNaN(Date.parse(customAudit.timestamp))),
+    'Audit entry contains valid ISO timestamp with date and time'
+  );
+
   console.log('\n========================================================');
   console.log(`Results: ${passedCount} passed, ${failedCount} failed out of ${passedCount + failedCount} tests.`);
   console.log('========================================================\n');

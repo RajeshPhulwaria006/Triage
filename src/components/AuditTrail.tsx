@@ -84,8 +84,14 @@ export const AuditTrail: React.FC<AuditTrailProps> = ({ auditLogs, onRefresh }) 
   };
 
   const formatTimestamp = (isoString: string) => {
-    const d = new Date(isoString);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    try {
+      const d = new Date(isoString);
+      const datePart = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+      const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return `${datePart}, ${timePart}`;
+    } catch {
+      return isoString;
+    }
   };
 
   return (
@@ -193,7 +199,7 @@ export const AuditTrail: React.FC<AuditTrailProps> = ({ auditLogs, onRefresh }) 
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] font-mono uppercase tracking-wider font-semibold">
                 <th className="py-3 px-3">Seq #</th>
-                <th className="py-3 px-3">Time</th>
+                <th className="py-3 px-3">Date &amp; Time</th>
                 <th className="py-3 px-3">Token #</th>
                 <th className="py-3 px-4">Patient Name</th>
                 <th className="py-3 px-3">Event Type</th>
@@ -227,7 +233,7 @@ export const AuditTrail: React.FC<AuditTrailProps> = ({ auditLogs, onRefresh }) 
                       </td>
 
                       {/* Timestamp */}
-                      <td className="py-3 px-3 font-mono text-slate-600 whitespace-nowrap">
+                      <td className="py-3 px-3 font-mono text-slate-600 whitespace-nowrap" title={entry.timestamp}>
                         {formatTimestamp(entry.timestamp)}
                       </td>
 

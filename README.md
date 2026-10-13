@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Triage — Smart OPD Patient Prioritisation
 
-## Getting Started
+Triage is a clinical decision-support prototype that helps busy Outpatient Departments (OPDs) prioritise patients by urgency instead of relying only on first-in, first-out tokens. It uses **deterministic, explainable rules** to assign a priority and show the rationale—without attempting to diagnose a disease.
 
-First, run the development server:
+## Key Features
+
+- **Three-level queue:** `IMMEDIATE`, `SOON`, and `ROUTINE`, ordered by clinical priority and then arrival time.
+- **Explainable triage:** Displays matched rules and a rationale for each priority.
+- **Fail-safe escalation:** Handles critical observations and missing vital signs conservatively.
+- **Nurse override:** Staff can change priority with a mandatory clinical justification.
+- **Live dashboard:** Registration, nursing queue, consultation status, and audit views refresh automatically.
+- **Audit trail:** Records registrations, status changes, and overrides; supports CSV export.
+- **Persistence options:** PostgreSQL when `DATABASE_URL` is configured, with local write-ahead-log (WAL) storage as a fallback.
+
+## Tech Stack
+
+- Next.js 16, React 19, TypeScript
+- Tailwind CSS 4, Lucide React
+- PostgreSQL (`postgres.js`) with local JSON Lines WAL fallback
+
+## Run Locally
+
+**Requirements:** Node.js and npm. PostgreSQL is optional for local/demo use.
 
 ```bash
+git clone https://github.com/RajeshPhulwaria006/Triage.git
+cd Triage
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To use PostgreSQL, set `DATABASE_URL` in your environment to a valid PostgreSQL connection string. The app can use local WAL storage when this variable is not configured.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Useful Commands
 
-## Learn More
+```bash
+npm run build       # Build for production
+npm run start       # Start the production server
+npm run lint        # Run ESLint
+npm run test:triage # Run triage rule tests
+npm run test        # Run comprehensive tests
+npm run verify      # Run end-to-end verification
+npm run seed:db     # Seed the database
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Workflow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Staff register a patient and enter the chief complaint and available vital signs.
+2. The rules engine evaluates the input and assigns a priority with a human-readable rationale.
+3. The patient appears in the severity-sorted queue.
+4. Clinical staff can update consultation status or override priority with a documented reason.
+5. Events are recorded in the audit trail for review.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Safety Notice
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Triage is a **demonstration and decision-support prototype**, not a diagnostic tool or a substitute for trained clinical judgement, emergency protocols, or validated hospital systems. Clinical rules must be reviewed and validated by qualified healthcare professionals before any real-world use.
